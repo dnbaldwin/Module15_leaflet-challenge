@@ -1,49 +1,8 @@
-// identify API endpoint as queryUrl
-
+// Store our API endpoint as queryUrl.
 // let queryUrl = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2023-01-01&endtime=2023-01-02&maxlongitude=-69.52148437&minlongitude=-123.83789062&maxlatitude=48.74894534&minlatitude=25.16517337";
 let queryUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_day.geojson';
 
 
-function markerRadius(magnitude) {
-    radius = magnitude * 10;
-    return radius;
-};
-
-function markerColor(depth) {
-    color_list = ['green', 'lime', 'yellow', 'orange', 'burnt_orange', 'red'];
-
-    if (depth >= 90) {
-        return color_list[5];
-    } else if (depth < 90 && depth >= 70) {
-        return color_list[4];
-    } else if (depth < 70 && depth >= 50) {
-        return color_list[3];
-    } else if (depth < 50 && depth >= 30) {
-        return color_list[2];
-    } else if (depth < 30 && depth >= 10) {
-        return color_list[1];
-    } else if (depth < 10 && depth >= -10) {
-        return color_list[0];
-    }
-};
-
-function createMarker(feature, latlng) {
-
-    let magnitude = feature.properties.mag;
-    let depth = feature.geometry.coordinates[2];
-
-    let markerOptions = {
-        radius: markerRadius(magnitude),
-        fillColor: markerColor(depth),
-        //color: markerColor(depth),
-        fillOpacity: 0.7,
-        opacity: 0.9,
-        weight: 1
-    }
-
-    return L.circleMarker(latlng, markerOptions);
-
-};
 
 // Perform a GET request to the query URL/
 d3.json(queryUrl).then(function (data) {
@@ -62,17 +21,19 @@ function createFeatures(earthquakeData) {
 
     // Create JSON layer
     let earthquakes = L.geoJSON(earthquakeData, {
-        onEachFeature: onEachFeature,
-        pointToLayer: createMarker
+        onEachFeature: onEachFeature
     });
 
+    var geojsonMarkerOptions = {
+        radius: feature.properties.mag,
+
+    }
     // Send data to map
     createMap(earthquakes);
+}
 
-    };
-    
 function createMap(earthquakes) {
-    
+
 
     // Create base layers.
     let base = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -104,7 +65,7 @@ function createMap(earthquakes) {
     });
 
     // markers ref: observablehq.com
-    
+
 
 
 
