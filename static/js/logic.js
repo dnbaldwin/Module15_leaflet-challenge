@@ -62,7 +62,8 @@ function createFeatures(earthquakeData) {
 
     // Add descriptive popup to each earthquake event
     function onEachFeature(feature, layer) {
-        layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>${new Date(feature.properties.time)}</p>`);
+        //layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><p>${new Date(feature.properties.time)}</p>`);
+        layer.bindPopup(`<h3>${feature.properties.place}</h3><br/>Magnitude: ${feature.properties.mag}<br/>Depth: ${feature.geometry.coordinates[2]} Km<br><br>Event Time: ${new Date(feature.properties.time)}`);
     }
 
     // Create JSON layer
