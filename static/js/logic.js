@@ -1,16 +1,21 @@
 // identify API endpoint as queryUrl
 
 // let queryUrl = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2023-01-01&endtime=2023-01-02&maxlongitude=-69.52148437&minlongitude=-123.83789062&maxlatitude=48.74894534&minlatitude=25.16517337";
-let queryUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_day.geojson';
+let queryUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_week.geojson';
 
 
 function markerRadius(magnitude) {
-    radius = magnitude * 10;
+    radius = magnitude * 1.5; // allow easier 'fine-tuning of marker size on map
     return radius;
 };
 
 function markerColor(depth) {
-    color_list = ['green', 'lime', 'yellow', 'orange', 'burnt_orange', 'red'];
+    // color_list = ['green', 'lime', 'yellow', 'orange', 'burnt_orange', 'red']; // initial color palette
+    // color_list = ['green', 'lime', 'yellow', 'orange', 'burnt-orange', 'red'];
+    //color_list = ['#66cc00', '#cccc00', '#cc9900', '#cc6600', '#cc3300', '#cc0000']; //red-green
+    // color_list = ['#ccffff', '#66ccff', '#33ccff', '#0099ff', '#0000ff', '#000099']; // blues
+    color_list = ['#e0ccff', '#c299ff', '#a366ff', '#8533ff', '#6600ff', '#4700b3']; // blues
+
 
     if (depth >= 90) {
         return color_list[5];
@@ -35,7 +40,7 @@ function createMarker(feature, latlng) {
     let markerOptions = {
         radius: markerRadius(magnitude),
         fillColor: markerColor(depth),
-        //color: markerColor(depth),
+        color: markerColor(depth),
         fillOpacity: 0.7,
         opacity: 0.9,
         weight: 1
@@ -83,10 +88,16 @@ function createMap(earthquakes) {
         attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
     });
 
+    var USGS_USTopo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 20,
+        attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+    });
+
     // Create baseMaps object.
     let baseMaps = {
         "Base Map": base,
-        "Topographic Map": topo
+        "Topographic Map": topo,
+        "USGS Topographic": USGS_USTopo
     };
 
     // Create an overlay object to hold our overlay.
@@ -95,21 +106,50 @@ function createMap(earthquakes) {
     };
 
     // Create our map, giving it the streetmap and earthquakes layers to display on load.
+
+    // Map bounds
+    //const corner1 = L.latLng(-70, -180);
+    //const corner2 = L.latLng(10, 180);
+    //const bounds = L.latLngBounds(corner1, corner2);
+
     let map = L.map("map", {
-        center: [
-            37.09, -95.71
-        ],
-        zoom: 5,
-        layers: [base, earthquakes]
+        
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 8,
+        layers: [base, earthquakes],
+        //maxBounds: bounds
+        
     });
-
-    // markers ref: observablehq.com
     
-
-
+    map.setView([10, -80], 2.5);
 
     // Create a layer control.
     L.control.layers(baseMaps, overlayMaps, {
         collapsed: false
     }).addTo(map);
+
+    // add Legend
+
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+    
+        var div = L.DomUtil.create('div', 'legend'),
+            // grades = [0, 10, 20, 50, 100, 200, 500, 1000],
+            grades = [-10, 10, 30, 50, 70, 90],
+            legendHeading = "<h4>Estim. Depth (Km)";
+
+            div.innerHTML += legendHeading;
+    
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + markerColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+        }
+        return div;
+    };
+    
+    legend.addTo(map);
 }
